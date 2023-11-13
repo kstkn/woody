@@ -43,5 +43,5 @@ nfpms:
     formats:
       - deb
     conflicts:
-      - home
+      - woody
     bindir: /usr/bin
