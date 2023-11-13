@@ -54,10 +54,10 @@ func update() {
 func main() {
 	token = os.Getenv("DIGITALOCEAN_ACCESS_TOKEN")
 	if token == "" {
-		log.Fatal("Environment variable DIGITALOCEAN_ACCESS_TOKEN is not set (https://cloud.digitalocean.com/account/api/tokens)")
+		// log.Fatal("Environment variable DIGITALOCEAN_ACCESS_TOKEN is not set (https://cloud.digitalocean.com/account/api/tokens)")
 	}
 
-	d, err := time.ParseDuration("WOODY_PERIOD")
+	d, err := time.ParseDuration(os.Getenv("WOODY_PERIOD"))
 	if err != nil {
 		d = 5 * time.Minute
 	}
