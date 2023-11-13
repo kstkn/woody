@@ -1,2 +1,0 @@
-d5cde9d4d6e0a699171fc1e947309aa897ca56998850e3ee2a86504cff0f2b74  woody_linux_arm.tar.gz
-dbb664ac76192b4ddbfb375952806beb7633844b9c1a3cd3ec4c7b12b955f20b  woody_linux_armv7.deb
