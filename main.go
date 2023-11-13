@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -24,27 +23,32 @@ func update() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("current public IP: %s update interval", loc.Query)
+	log.Printf("current public IP: %s\n", loc.Query)
 
 	if loc.Query == ip {
-		fmt.Print("public IP hasn't changed public IP")
+		log.Println("public IP hasn't changed public IP")
 		// do nothing, ip hasn't changed
 	}
 
 	// store and update ip
 	ip = loc.Query
 
-	do := godo.NewFromToken(os.Getenv("DIGITALOCEAN_ACCESS_TOKEN"))
+	do := godo.NewFromToken(token)
 
 	r, _, _ := do.Domains.RecordsByTypeAndName(context.Background(), "kstkn.com", "A", "pp.kstkn.com", nil)
 	if len(r) != 1 {
-		log.Fatal("no records found for update")
+		log.Fatal("no DNS records found for update")
+	}
+
+	if r[0].Data == ip {
+		log.Println("DNS record already has correct IP")
+		return
 	}
 
 	do.Domains.EditRecord(context.Background(), "kstkn.com", r[0].ID, &godo.DomainRecordEditRequest{
 		Data: ip,
 	})
-	fmt.Print("DNS records updated")
+	log.Println("DNS records updated")
 }
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 	if err != nil {
 		d = 5 * time.Minute
 	}
-	fmt.Printf("running with %s update interval", d)
+	log.Printf("running with %s update interval\n", d)
 
 	signalNotifyContext, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
