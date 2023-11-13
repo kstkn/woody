@@ -26,8 +26,9 @@ func update() {
 	log.Printf("current public IP: %s\n", loc.Query)
 
 	if loc.Query == ip {
-		log.Println("public IP hasn't changed public IP")
 		// do nothing, ip hasn't changed
+		log.Println("public IP hasn't changed")
+		return
 	}
 
 	// store and update ip
@@ -54,7 +55,7 @@ func update() {
 func main() {
 	token = os.Getenv("DIGITALOCEAN_ACCESS_TOKEN")
 	if token == "" {
-		// log.Fatal("Environment variable DIGITALOCEAN_ACCESS_TOKEN is not set (https://cloud.digitalocean.com/account/api/tokens)")
+		log.Fatal("Environment variable DIGITALOCEAN_ACCESS_TOKEN is not set (https://cloud.digitalocean.com/account/api/tokens)")
 	}
 
 	d, err := time.ParseDuration(os.Getenv("WOODY_PERIOD"))
