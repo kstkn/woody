@@ -45,3 +45,7 @@ nfpms:
     conflicts:
       - woody
     bindir: /usr/bin
+    contents:
+      - src: ./woody.service
+        dst: /etc/systemd/system/woody.service
+        type: config
