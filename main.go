@@ -5,16 +5,50 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/digitalocean/godo"
 	"github.com/kstkn/woody/goip"
 )
 
-var ip string
+var (
+	token string
+	ip    string
+)
+
+func update() {
+	// find out current ip
+	loc, err := goip.NewClient().GetLocation()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("current public IP: %s update interval", loc.Query)
+
+	if loc.Query == ip {
+		fmt.Print("public IP hasn't changed public IP")
+		// do nothing, ip hasn't changed
+	}
+
+	// store and update ip
+	ip = loc.Query
+
+	do := godo.NewFromToken(os.Getenv("DIGITALOCEAN_ACCESS_TOKEN"))
+
+	r, _, _ := do.Domains.RecordsByTypeAndName(context.Background(), "kstkn.com", "A", "pp.kstkn.com", nil)
+	if len(r) != 1 {
+		log.Fatal("no records found for update")
+	}
+
+	do.Domains.EditRecord(context.Background(), "kstkn.com", r[0].ID, &godo.DomainRecordEditRequest{
+		Data: ip,
+	})
+	fmt.Print("DNS records updated")
+}
 
 func main() {
-	token := os.Getenv("DIGITALOCEAN_ACCESS_TOKEN")
+	token = os.Getenv("DIGITALOCEAN_ACCESS_TOKEN")
 	if token == "" {
 		log.Fatal("Environment variable DIGITALOCEAN_ACCESS_TOKEN is not set (https://cloud.digitalocean.com/account/api/tokens)")
 	}
@@ -25,6 +59,11 @@ func main() {
 	}
 	fmt.Printf("running with %s update interval", d)
 
+	signalNotifyContext, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
+	update()
+
 	ticker := time.NewTicker(d)
 	tickerDone := make(chan bool)
 	go func() {
@@ -33,33 +72,10 @@ func main() {
 			case <-tickerDone:
 				return
 			case <-ticker.C:
-				// find out current ip
-				loc, err := goip.NewClient().GetLocation()
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Printf("current public IP: %s update interval", loc.Query)
-
-				if loc.Query == ip {
-					fmt.Print("public IP hasn't changed public IP")
-					// do nothing, ip hasn't changed
-				}
-
-				// store and update ip
-				ip = loc.Query
-
-				do := godo.NewFromToken(os.Getenv("DIGITALOCEAN_ACCESS_TOKEN"))
-
-				r, _, _ := do.Domains.RecordsByTypeAndName(context.Background(), "kstkn.com", "A", "pp.kstkn.com", nil)
-				if len(r) != 1 {
-					log.Fatal("no records found for update")
-				}
-
-				do.Domains.EditRecord(context.Background(), "kstkn.com", r[0].ID, &godo.DomainRecordEditRequest{
-					Data: ip,
-				})
-				fmt.Print("DNS records updated")
+				update()
 			}
 		}
 	}()
+
+	<-signalNotifyContext.Done()
 }
