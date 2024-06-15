@@ -7,8 +7,9 @@ Environment="DIGITALOCEAN_ACCESS_TOKEN="
 Environment="WOODY_PERIOD=5m"
 
 Restart=always
+RestartSec=300
 ExecStart=/usr/bin/woody
-TimeoutStopSec=20s
+TimeoutSec=20s
 
 DynamicUser=true
 LockPersonality=true
